@@ -47,44 +47,38 @@ async function loadSettings() {
     }
 }
 
+const EXCLUDED_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'HEAD', 'META', 'LINK']);
+
 function processTextNode(node) {
     if (!node.nodeValue?.trim()) return;
+    if (node.parentElement && EXCLUDED_TAGS.has(node.parentElement.tagName)) return;
 
     let text = node.nodeValue;
-    let modified = false;
+    const initialText = text;
 
     if (state.textReplacement) {
         state.replacements.forEach(({ find, replace, caseInsensitive }) => {
             if (!find || !replace) return;
             try {
                 const regex = new RegExp(escapeRegExp(find), 'g' + (caseInsensitive ? 'i' : ''));
-                if (regex.test(text)) {
-                    text = text.replace(regex, replace);
-                    modified = true;
-                }
+                text = text.replace(regex, replace);
             } catch (e) { }
         });
     }
 
-    if (state.emailDetection && EMAIL_PATTERN.test(text)) {
+    if (state.emailDetection) {
         text = text.replace(EMAIL_PATTERN, '[EMAIL_HIDDEN]');
-        modified = true;
     }
 
     if (state.apiKeyProtection && typeof API_KEY_PATTERNS !== 'undefined') {
         API_KEY_PATTERNS.forEach(({ name, pattern, replacement }) => {
             if (name === 'Email Address') return;
-            if (pattern.test(text)) {
-                text = text.replace(pattern, replacement);
-                modified = true;
-            }
+            text = text.replace(pattern, replacement);
         });
     }
 
-    if (modified) node.nodeValue = text;
-
-    if (node.parentElement && !node.parentElement.hasAttribute('data-hideme-processed')) {
-        node.parentElement.setAttribute('data-hideme-processed', 'true');
+    if (text !== initialText) {
+        node.nodeValue = text;
     }
 }
 
@@ -93,10 +87,15 @@ function escapeRegExp(string) {
 }
 
 function walkTextNodes(element) {
-    if (!element || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(element.tagName)) return;
+    if (!element) return;
 
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
-        acceptNode: node => node.nodeValue?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+        acceptNode: node => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                return EXCLUDED_TAGS.has(node.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP;
+            }
+            return node.nodeValue?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
     });
 
     const nodes = [];
@@ -137,7 +136,6 @@ async function init() {
                     if (node.nodeType === Node.TEXT_NODE) processTextNode(node);
                     else if (node.nodeType === Node.ELEMENT_NODE) {
                         walkTextNodes(node);
-                        node.setAttribute?.('data-hideme-processed', 'true');
                     }
                 });
             } else if (mutation.type === 'characterData') {
