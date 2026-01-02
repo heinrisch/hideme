@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HideMe Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #3b82f6;
+        }
+
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .test-section h2 {
+            margin-top: 0;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 5px 10px 0;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        #dynamic-content {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 4px;
+            min-height: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>HideMe Extension Test Page</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Static Content (Page Load)</h2>
+        <p>This content should never flash. Test with personal information:</p>
+        <ul>
+            <li>Name: John Doe</li>
+            <li>Email: john.doe@example.com</li>
+            <li>Email 2: test@gmail.com</li>
+            <li>City: Springfield</li>
+        </ul>
+        <p><strong>Expected:</strong> Names and emails should be hidden immediately, no flash visible.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Dynamic Content (JavaScript)</h2>
+        <button onclick="addDynamicContent()">Add Dynamic Content</button>
+        <button onclick="addDelayedContent()">Add Delayed Content (1s)</button>
+        <div id="dynamic-content"></div>
+        <p><strong>Expected:</strong> Dynamically added content should not flash before being hidden.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: API Keys</h2>
+        <p>Test API key detection:</p>
+        <ul>
+            <li>AWS Key: AKIAIOSFODNN7EXAMPLE</li>
+            <li>GitHub Token: ghp_1234567890abcdefghijklmnopqrstuv</li>
+            <li>Twitch Key: live_123456789_abcdefghijklmnopqrstuvwxyz1234567890</li>
+        </ul>
+        <p><strong>Expected:</strong> API keys should be hidden immediately.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Email Detection</h2>
+        <p>Various email formats:</p>
+        <ul>
+            <li>Simple: user@domain.com</li>
+            <li>With dots: first.last@company.co.uk</li>
+            <li>With numbers: user123@test.org</li>
+            <li>With plus: user+tag@example.com</li>
+        </ul>
+        <p><strong>Expected:</strong> All emails should be replaced with [EMAIL_HIDDEN].</p>
+    </div>
+
+    <script>
+        function addDynamicContent() {
+            const container = document.getElementById('dynamic-content');
+            const newContent = document.createElement('div');
+            newContent.innerHTML = `
+        <p><strong>Dynamic Content Added:</strong></p>
+        <p>Name: Jane Smith</p>
+        <p>Email: jane.smith@example.com</p>
+        <p>This should NOT flash!</p>
+      `;
+            container.appendChild(newContent);
+        }
+
+        function addDelayedContent() {
+            setTimeout(() => {
+                const container = document.getElementById('dynamic-content');
+                const newContent = document.createElement('div');
+                newContent.innerHTML = `
+          <p><strong>Delayed Content Added (after 1s):</strong></p>
+          <p>Secret: Bob Johnson</p>
+          <p>Contact: bob@secret.com</p>
+          <p>This should NOT flash either!</p>
+        `;
+                container.appendChild(newContent);
+            }, 1000);
+        }
+
+        // Simulate SPA-like behavior
+        function simulateSPA() {
+            setInterval(() => {
+                const container = document.getElementById('dynamic-content');
+                if (Math.random() > 0.7) {
+                    const p = document.createElement('p');
+                    p.textContent = `Random update: user${Math.floor(Math.random() * 1000)}@test.com`;
+                    container.appendChild(p);
+                }
+            }, 3000);
+        }
+
+        // Uncomment to test continuous updates
+        // simulateSPA();
+    </script>
+</body>
+
+</html>
